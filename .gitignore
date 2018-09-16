@@ -1,4 +1,5 @@
 core
 *.o
 
+/cat/cat
 /hello/hello

@@ -1,0 +1,50 @@
+     1                                  ;; vim:ft=nasm
+     2                                  ;; cat - Read from standard input, write to standard output
+     3                                  
+     4                                  global _start
+     5                                  section .text
+     6                                  _start:
+     7 00000000 EB00                      jmp read1
+     8                                  
+     9                                  read1:
+    10                                  .again:
+    11                                    ;; read(fd, buf, len)
+    12 00000002 B800000000                mov rax, 0
+    13 00000007 488B3C25[00000000]        mov rdi, [fd]
+    14 0000000F 48BE-                     mov rsi, buf
+    14 00000011 [0000000000000000] 
+    15 00000019 BA00200000                mov rdx, len
+    16 0000001E 0F05                      syscall
+    17                                  
+    18 00000020 4883F800                  cmp rax, 0
+    19 00000024 7413                      je .done    ;; RAX = 0 means nothing to reade
+    20 00000026 7C1D                      jl .failed  ;; RAX < 0 means an error
+    21                                  
+    22                                  .write:
+    23                                    ;; write(1, buf, ...)
+    24 00000028 4889C2                    mov rdx, rax
+    25 0000002B B801000000                mov rax, 1   ; has to be last, since return value of
+    26                                                 ; read(...) call was in RAX, which we need
+    27                                                 ; to pass to write(...) via RDX.
+    28 00000030 BF01000000                mov rdi, 1
+    29                                    ;; NB: RSI is unchanged from the read(...) call
+    30 00000035 0F05                      syscall
+    31 00000037 EBC9                      jmp .again
+    32                                  
+    33                                  .done:
+    34                                    ;; exit(0)
+    35 00000039 B83C000000                mov rax, 60
+    36 0000003E BF00000000                mov rdi, 0
+    37 00000043 0F05                      syscall
+    38                                  
+    39                                  .failed:
+    40                                    ;; exit(1)
+    41 00000045 B83C000000                mov rax, 60
+    42 0000004A BF01000000                mov rdi, 1
+    43 0000004F 0F05                      syscall
+    44                                  
+    45                                  section .data
+    46 00000000 00000000                  fd dd 0
+    47                                  section .bss
+    48                                    len equ 8192
+    49 00000000 <res 00002000>            buf resb $len
