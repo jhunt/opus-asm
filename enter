@@ -1,0 +1,6 @@
+#!/bin/sh
+docker run -it \
+           -v $PWD:/asm \
+           -e "GIT_NAME=$(git config user.name)" \
+           -e "GIT_EMAIL=$(git config user.email)" \
+           huntprod/asm
