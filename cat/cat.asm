@@ -4,7 +4,44 @@
 global _start
 section .text
 _start:
-  jmp read1
+  ;; argc is at RSP
+  ;; argv stretches from RSP+8
+  ;;                  to RSP+8 + (8 * argc)
+
+  mov r13, [rsp]
+  cmp r13, 1
+  je read1      ;; no arguments, use stdin
+
+  xor r12, r12
+.next:
+  inc r12
+  cmp r13, r12
+  je .done
+
+  ;; open(path, O_RDONLY)
+  mov rax, 2
+  mov rdi, [rsp+8+8*r12]
+  mov rsi, 0  ;; O_RDONLY
+  syscall
+
+  cmp rax, 0
+  jl .failed
+
+  mov [fd], rax
+  call read1
+  jmp .next
+
+.failed:
+  ;; exit(1)
+  mov rax, 60
+  mov rdi, 2
+  syscall
+
+.done:
+  ;; exit(0)
+  mov rax, 60
+  mov rdi, 2
+  syscall
 
 read1:
 .again:
@@ -31,10 +68,7 @@ read1:
   jmp .again
 
 .done:
-  ;; exit(0)
-  mov rax, 60
-  mov rdi, 0
-  syscall
+  ret
 
 .failed:
   ;; exit(1)
